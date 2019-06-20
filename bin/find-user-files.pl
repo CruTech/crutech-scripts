@@ -13,7 +13,11 @@ chdir $Bin;
 chdir '..';
 
 use lib 'lib';
-use Crutech::Utils;
+use Crutech::Utils qw(
+    has_content
+    slurp
+    ltsp_users
+);
 
 my $template_dir;
 
@@ -34,11 +38,11 @@ pod2usage(1) if $help;
 pod2usage(-exitval => 0, -verbose => 2) if $man;
 
 # defaults
-$ignore_list_file_name = 'config/ignore-file-list.txt' unless Crutech::Utils::has_content($ignore_list_file_name);
-$template_dir = 'templates/user-home-template' unless Crutech::Utils::has_content($template_dir);
+$ignore_list_file_name = 'config/ignore-file-list.txt' unless has_content($ignore_list_file_name);
+$template_dir = 'templates/user-home-template' unless has_content($template_dir);
 
 # help for required args error:
-pod2usage(1) unless Crutech::Utils::has_content($archive_dir);
+pod2usage(1) unless has_content($archive_dir);
 
 
 # Further process and report args
@@ -46,7 +50,7 @@ $archive_dir = File::Spec->rel2abs( $archive_dir ) or die "Unable to resolve arc
 say '=' x 78;
 say "| Archive output dir: '$archive_dir'";
 
-my @ignore_file = Crutech::Utils::has_content($ignore_list_file_name) ? split( "\n", Crutech::Utils::slurp($ignore_list_file_name) ) : ();
+my @ignore_file = has_content($ignore_list_file_name) ? split( "\n", slurp($ignore_list_file_name) ) : ();
 say '=' x 78;
 say "| Ignored files:";
 say '-' x 78;
@@ -56,62 +60,64 @@ say join "\n", @ignore_file;
 say '=' x 78;
 say "| User list:";
 say '-' x 78;
-say join "\n", Crutech::Utils::ltsp_users;
+say join "\n", ltsp_users;
 
 say '=' x 78;
 
 my %template;
 foreach my $file ( list_contents_recursive($template_dir) ) {
-  $template{normalise_path($file, $template_dir)} = sha256(Crutech::Utils::slurp($file)) unless scalar grep { $_ eq normalise_path($file, $template_dir) } @ignore_file;
+    $template{normalise_path($file, $template_dir)} = sha256(slurp($file)) unless scalar grep { $_ eq normalise_path($file, $template_dir) } @ignore_file;
 }
 
-foreach my $user ( Crutech::Utils::ltsp_users ) {
-  my @user_files;
-  my $path = "/home/$user";
-  foreach my $file ( list_contents_recursive($path) ) {
-    if (exists $template{normalise_path($file, $path)}) {
-      # say "$file exists in template";
-      if (sha256(Crutech::Utils::slurp($file)) ne $template{normalise_path($file, $path)}) {
-        # say "$file content does not match template";
-        push @user_files, $file;
-      }
+foreach my $user ( ltsp_users ) {
+    my @user_files;
+    my $path = "/home/$user";
+    foreach my $file ( list_contents_recursive($path) ) {
+        if (exists $template{normalise_path($file, $path)}) {
+            # say "$file exists in template";
+            if (sha256(slurp($file)) ne $template{normalise_path($file, $path)}) {
+                # say "$file content does not match template";
+                push @user_files, $file;
+            }
+        }
+        else {
+            # say "$file does not exist in template as: " . normalise_path($file, $path);
+            push @user_files, $file unless scalar grep { $_ eq normalise_path($file, $path) } @ignore_file;
+        }
     }
-    else {
-      # say "$file does not exist in template as: " . normalise_path($file, $path);
-      push @user_files, $file unless scalar grep { $_ eq normalise_path($file, $path) } @ignore_file;
-    }
-  }
-  say '-' x 78;
-  say $user;
-  say '-' x 78;
-  say join "\n", @user_files;
+    say '-' x 78;
+    say $user;
+    say '-' x 78;
+    say join "\n", @user_files;
 
-  if (@user_files) {
-    zip \@user_files => "$archive_dir/$user.zip" or die "zip failed: $ZipError\n";
-  }
+    if (@user_files) {
+        zip \@user_files => "$archive_dir/$user.zip" or die "zip failed: $ZipError\n";
+    }
 }
 
+# Collects a list of files in a directory structure
 sub list_contents_recursive {
-  my $path = @_ ? shift(@_) : die "list_contents_recursive expected one argument \$path!";
-  my @files;
+    my $path = @_ ? shift(@_) : die "list_contents_recursive expected one argument \$path!";
+    my @files;
 
-  opendir(my $dir_handle, $path) or die "Unable to open dir '$path': $!";
-  while (my $node = readdir $dir_handle) {
-    if ( -d "$path/$node" and $node !~ m/^\./ ) {
-      push @files, list_contents_recursive("$path/$node");
+    opendir(my $dir_handle, $path) or die "Unable to open dir '$path': $!";
+    while (my $node = readdir $dir_handle) {
+        if ( -d "$path/$node" and $node !~ m/^\./ ) {
+            push @files, list_contents_recursive("$path/$node");
+        }
+        else {
+            push @files, "$path/$node" if $node !~ m/^\./;
+        }
     }
-    else {
-      push @files, "$path/$node" if $node !~ m/^\./;
-    }
-  }
-  closedir $dir_handle;
+    closedir $dir_handle;
 
-  @files
+    @files
 }
 
+# Removes a given prefix from the path string, used to create relative paths.
 sub normalise_path {
-  my ($path, $prefix) = (shift(@_), shift(@_));
-  substr $path, length($prefix), length($path);
+    my ($path, $prefix) = (shift(@_), shift(@_));
+    substr $path, length($prefix), length($path);
 }
 
 __END__

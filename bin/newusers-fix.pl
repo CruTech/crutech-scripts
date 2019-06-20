@@ -9,16 +9,19 @@ chdir $Bin;
 chdir '..';
 
 use lib 'lib';
-use Crutech::Utils;
+use Crutech::Utils qw(
+    has_content
+    run
+);
 
 my $user_file;
 my $out;
 my $help;
 my $man;
 GetOptions(
-  "user-file=s"     => \$user_file,
-  "help|?"          => \$help,
-  "man"             => \$man,
+    "user-file=s"     => \$user_file,
+    "help|?"          => \$help,
+    "man"             => \$man,
 ) or pod2usage(2);
 
 #helps
@@ -26,17 +29,15 @@ pod2usage(1) if $help;
 pod2usage(-exitval => 0, -verbose => 2) if $man;
 
 # help for required args error:
-pod2usage(1) unless Crutech::Utils::has_content($user_file);
+pod2usage(1) unless has_content($user_file);
 
 open(my $users, '<', $user_file) or die "Unable to open '$user_file' for read: $!";
 while (my $user = <$users>) {
-  my ($fh, $filename) = tempfile();
-  print $fh $user;
-  close $fh;
-  #throw error if system call returns error code
-  if (system "newusers $filename") {
-    warn "Unable to add $user via newusers";
-  }
+    my ($fh, $filename) = tempfile();
+    print $fh $user;
+    close $fh;
+
+    run('newusers', $filename) or warn "Unable to add $user via newusers";
 }
 close $users;
 

@@ -9,7 +9,9 @@ chdir $Bin;
 chdir '..';
 
 use lib 'lib';
-use Crutech::Utils;
+use Crutech::Utils qw(
+    run
+);
 
 my $help;
 my $man;
@@ -32,15 +34,15 @@ say '=' x 78;
 
 foreach my $user (Crutech::Utils::ltsp_users) {
     say "Updating $user...";
-    die "Unable to copy home template!" if system "cp -R ./templates/user-home-template/* /home/$user/";
-    die "Unable to chown new home!" if system "chown -R $user /home/$user/*";
-    die "Unable to add user to starcraft group!" if system "usermod -a -G starcraft $user";
+    run("cp -R ./templates/user-home-template/* /home/$user/") or die "Unable to copy home template!";
+    run("chown -R $user /home/$user/*") or die "Unable to chown new home!";
+    run("usermod -a -G starcraft $user") or die "Unable to add user to starcraft group!";
 }
 
 # Example template call:
-# die "Unable to install gish icon template!" if system "bin/add-template-to-homes.pl templates/gish.desktop.template Desktop/gish.desktop";
+# run("bin/add-template-to-homes.pl templates/gish.desktop.template Desktop/gish.desktop") or die "Unable to install gish icon template!";
 
-die "Unable to install gish icon template!" if system "bin/setup-on-login-hooks.pl";
+run("bin/setup-on-login-hooks.pl") or die "Unable to install gish icon template!";
 
 __END__
 

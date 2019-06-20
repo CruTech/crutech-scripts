@@ -11,7 +11,9 @@ chdir '..';
 use feature qw( say );
 
 use lib 'lib';
-use Crutech::Utils;
+use Crutech::Utils qw(
+    ltsp_users
+);
 
 my $out;
 my $help;
@@ -36,7 +38,7 @@ my $build_actions = sub {
     );
 };
 
-foreach my $user (Crutech::Utils::ltsp_users) {
+foreach my $user (ltsp_users) {
   say "adding to $user...";
   my $out_content = $build_actions->($user);
   open(my $out_fh, ">>", "/home/$user/.profile") or die "Unable to open '/home/$user/.profile': $!";

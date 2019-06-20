@@ -8,7 +8,10 @@ chdir $Bin;
 chdir '..';
 
 use lib 'lib';
-use Crutech::Utils;
+use Crutech::Utils qw(
+    has_content
+    slurp
+);
 
 my $user_list;
 my $password_wordslist;
@@ -16,11 +19,11 @@ my $out;
 my $help;
 my $man;
 GetOptions(
-  "user-list=s"     => \$user_list,
-  "word-list=s"     => \$password_wordslist,
-  "out=s"           => \$out,
-  "help|?"          => \$help,
-  "man"             => \$man,
+    "user-list=s"     => \$user_list,
+    "word-list=s"     => \$password_wordslist,
+    "out=s"           => \$out,
+    "help|?"          => \$help,
+    "man"             => \$man,
 ) or pod2usage(2);
 
 #helps
@@ -28,41 +31,41 @@ pod2usage(1) if $help;
 pod2usage(-exitval => 0, -verbose => 2) if $man;
 
 # help for required args error:
-pod2usage(1) unless Crutech::Utils::has_content($user_list) and Crutech::Utils::has_content($out);
+pod2usage(1) unless has_content($user_list) and has_content($out);
 
-$password_wordslist = 'config/password-wordlist.txt' unless Crutech::Utils::has_content($password_wordslist);
+$password_wordslist = 'config/password-wordlist.txt' unless has_content($password_wordslist);
 
 my $numbers = [(2..5), (7..9)]; #no 0, 1 or 6
 my $user_sequence = 19; #start somehwere in the double digits
 
 #gather user names, seperating by line, and split multi-part names by spaces.
 my @names = map {
-              [
-                grep { Crutech::Utils::has_content($_) }
-                split /\s+/, $_
-              ]
+                [
+                    grep { has_content($_) }
+                    split /\s+/, $_
+                ]
             }
-            grep { Crutech::Utils::has_content($_) }
+            grep { has_content($_) }
             split "\n",
-            Crutech::Utils::slurp($user_list);
+            slurp($user_list);
 
 # gather passwords words seperating on new lines
 my $passwords = [
-  grep { Crutech::Utils::has_content($_) }
-  split "\n",
-  Crutech::Utils::slurp($password_wordslist)
+    grep { has_content($_) }
+    split "\n",
+    slurp($password_wordslist)
 ];
 
 # prepare our file to output to
 open(my $out_fh, '>', $out) or die "Unable to open out: '$out': $!";
 
 foreach my $user (@names) {
- my $user_name = lc($user->[0]) . ($user_sequence++) . (scalar(@$user) > 1 ? lc($user->[1]) : '');
- my $user_pass = pick($passwords) . pick($numbers) . pick($passwords);
- print $out_fh "$user_name:$user_pass\:::"
-  . (join ' ', @$user)
-  . ":/home/$user_name:/bin/bash"
-  . "\n";
+    my $user_name = lc($user->[0]) . ($user_sequence++) . (scalar(@$user) > 1 ? lc($user->[1]) : '');
+    my $user_pass = pick($passwords) . pick($numbers) . pick($passwords);
+    print $out_fh "$user_name:$user_pass\:::"
+        . (join ' ', @$user)
+        . ":/home/$user_name:/bin/bash"
+        . "\n";
 }
 
 close $out_fh;
@@ -72,9 +75,9 @@ print "-=Complete=-\n";
 # Pick a random value from an array.
 # Uses inbuilt rand function so this is not the best random sequence around
 sub pick {
-  my $array_ref = shift;
-  die "pick(\@) : expected an array ref but recieved: '" . ref($array_ref) . "'\n" unless ref($array_ref) eq 'ARRAY';
-  $array_ref->[int( rand(scalar(@$array_ref) - 1) )]
+    my $array_ref = shift;
+    die "pick(\@) : expected an array ref but recieved: '" . ref($array_ref) . "'\n" unless ref($array_ref) eq 'ARRAY';
+    $array_ref->[int( rand(scalar(@$array_ref) - 1) )]
 }
 
 __END__

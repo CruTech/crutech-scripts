@@ -9,17 +9,20 @@ chdir $Bin;
 chdir '..';
 
 use lib 'lib';
-use Crutech::Utils;
+use Crutech::Utils qw(
+    has_content
+    slurp
+);
 
 my $template_file;
 my $out;
 my $help;
 my $man;
 GetOptions(
-  "out=s"           => \$out,
-  "template=s"      => \$template_file,
-  "help|?"          => \$help,
-  "man"             => \$man,
+    "out=s"           => \$out,
+    "template=s"      => \$template_file,
+    "help|?"          => \$help,
+    "man"             => \$man,
 ) or pod2usage(2);
 
 #helps
@@ -27,23 +30,18 @@ pod2usage(1) if $help;
 pod2usage(-exitval => 0, -verbose => 2) if $man;
 
 # help for required args error:
-pod2usage(1) unless Crutech::Utils::has_content($template_file) and Crutech::Utils::has_content($out);
+pod2usage(1) unless has_content($template_file) and has_content($out);
 
-open(my $template_fh, "<", $template_file) or die "Unable to open '$template_file': $!";
-my $template = do {
-  local $/;
-  <$template_fh>;
-};
-close $template_fh;
+my $template = slurp($template_file);
 
 foreach my $user (Crutech::Utils::ltsp_users) {
-  say "adding to $user...";
-  my $out_content = $template;
-  $out_content =~ s/<<user>>/$user/g;
-  open(my $out_fh, ">", "/home/$user/$out") or die "Unable to open '/home/$user/$out': $!";
-  print $out_fh $out_content;
-  close $out_fh;
-  die "Unable to chown '/home/$user/$out'!" if system "chown $user /home/$user/$out";
+    say "adding to $user...";
+    my $out_content = $template;
+    $out_content =~ s/<<user>>/$user/g;
+    open(my $out_fh, ">", "/home/$user/$out") or die "Unable to open '/home/$user/$out': $!";
+    print $out_fh $out_content;
+    close $out_fh;
+    die "Unable to chown '/home/$user/$out'!" if system "chown $user /home/$user/$out";
 }
 
 __END__

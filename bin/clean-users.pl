@@ -12,7 +12,10 @@ chdir $Bin;
 chdir '..';
 
 use lib 'lib';
-use Crutech::Utils;
+use Crutech::Utils qw(
+    ltsp_users
+    run
+);
 
 my $help;
 my $man;
@@ -27,20 +30,18 @@ pod2usage(-exitval => 0, -verbose => 2) if $man;
 
 #report user list
 say '=' x 78;
-say "| User list:";
+say '| User list:';
 say '-' x 78;
-say join "\n", Crutech::Utils::ltsp_users;
+say join "\n", ltsp_users;
 
 say '=' x 78;
 
 chdir $calling_cwd;
-foreach my $user (Crutech::Utils::ltsp_users) {
-  say $user;
-  if (system "deluser --remove-home $user") {
-    die "Failed removing user '$user'!\n";
-  }
+foreach my $user (ltsp_users) {
+    say $user;
+    run('deluser', '--remove-home', $user) or die "Failed removing user '$user'!\n";
 }
-say "-=complete=-";
+say '-=complete=-';
 
 __END__
 
