@@ -1,7 +1,7 @@
 #! /usr/bin/env perl
-use v5.10;
 use strict;
 use warnings;
+use feature qw( say );
 use Getopt::Long;
 use Pod::Usage;
 use Digest::SHA qw( sha256 );
@@ -168,8 +168,8 @@ A path to save zip archives to.
 
 =head1 DESCRIPTION
 
-B<This program> asses user directories against an example template.
-Files are then collected if they are new or changed.
+B<This program> compares user directories against an example template.
+Files are collected if they are new or changed.
 Collected files are placed in a zip archive named after the user in the arch-dir.
 
 =cut

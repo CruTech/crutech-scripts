@@ -1,6 +1,7 @@
 #! /usr/bin/env perl
 use strict;
 use warnings;
+use feature qw( say );
 use Getopt::Long;
 use Pod::Usage;
 use FindBin qw( $Bin );

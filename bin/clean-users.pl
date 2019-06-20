@@ -1,7 +1,7 @@
 #! /usr/bin/env perl
-use v5.10;
 use strict;
 use warnings;
+use feature qw( say );
 use Getopt::Long;
 use Pod::Usage;
 use Cwd;

@@ -1,7 +1,7 @@
 #! /usr/bin/env perl
-use v5.10;
 use strict;
 use warnings;
+use feature qw( say );
 use Getopt::Long;
 use Pod::Usage;
 use FindBin qw( $Bin );
@@ -14,8 +14,8 @@ use Crutech::Utils;
 my $help;
 my $man;
 GetOptions(
-  "help|?"          => \$help,
-  "man"             => \$man,
+    "help|?"          => \$help,
+    "man"             => \$man,
 ) or pod2usage(2);
 
 #helps
@@ -31,13 +31,16 @@ say join "\n", Crutech::Utils::ltsp_users;
 say '=' x 78;
 
 foreach my $user (Crutech::Utils::ltsp_users) {
-  say "Updating $user...";
-  die "Unable to copy home template!" if system "cp -R ./templates/user-home-template/* /home/$user/";
-  die "Unable to chown new home!" if system "chown -R $user /home/$user/*";
-  die "Unable to add user to starcraft group!" if system "usermod -a -G starcraft $user";
+    say "Updating $user...";
+    die "Unable to copy home template!" if system "cp -R ./templates/user-home-template/* /home/$user/";
+    die "Unable to chown new home!" if system "chown -R $user /home/$user/*";
+    die "Unable to add user to starcraft group!" if system "usermod -a -G starcraft $user";
 }
 
-die "Unable to install gish icon template!" if system "bin/add-template-to-homes.pl templates/gish.desktop.template Desktop/gish.desktop";
+# Example template call:
+# die "Unable to install gish icon template!" if system "bin/add-template-to-homes.pl templates/gish.desktop.template Desktop/gish.desktop";
+
+die "Unable to install gish icon template!" if system "bin/setup-on-login-hooks.pl";
 
 __END__
 
