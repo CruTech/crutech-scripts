@@ -6,20 +6,23 @@ A repo of scripts for Crütech!
 Currently included scripts can be found in the `bin` directory of this project.
 These scripts are:
   * `user_namer.pl` for generating adduser compatible lists.
-  * `newusers-fix.pl` for calling newusers command safely.
-  * `setup-users.pl` for filling in users home directories.
-    * `add-template-to-homes.pl` for adding templated files.
-    * `setup-on-login-hooks.pl` for installing .profile scripts to users.
+  * `newusers-fix.pl` for calling newusers command safely^.
+  * `setup-users.pl` for filling in users home directories^°.
+    * `add-template-to-homes.pl` for adding templated files^.
+    * `setup-on-login-hooks.pl` for installing .profile scripts to users^.
   * `find-user-files.pl` for collecting and archiving and user files after camp.
-  * `clean-users.pl` for cleaning up users after a camp.
+  * `clean-users.pl` for cleaning up users after a camp^.
+
+-- ^ These scripts require root user permission, either run from the root user or call with sudo.
+-- ° This script requires the presence of a 'starcraft' group to exist on the system, if required execute: `groupadd starcraft`.
 
 to call these scripts, run them from the project root:
 `bin/<script-name>.pl [options]`
-All scripts implement a --help option documentation can be retrieved with:
+All scripts implement a --man option documentation can be retrieved with:
 `perldoc <script-name>`
 
 or via
-`bin/<script-name>.pl --man`
+`bin/<script-name>.pl --help`
 
 All of the scripts are written in Perl5 and only utilise core modules (however many linux distros interpret that defenition liberaly). As such any system perl should be able to execute these scripts without any additional packages. In the case where this is not so (A system with an incomplete core library) you may consult the `cpanfile` for a complete list of modules used (and use `cpanm --sudo --installdeps .` to bring everything up to date).
 If you are having further issues with dependencies it may be worth looking into plenv to setup an independent perl build to your system perl, any perl version newer than 5.10.0 should work.
