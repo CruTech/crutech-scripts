@@ -7,14 +7,16 @@ Currently included scripts can be found in the `bin` directory of this project.
 These scripts are:
   * `user_namer.pl` for generating adduser compatible lists.
   * `newusers-fix.pl` for calling newusers command safely^.
-  * `setup-users.pl` for filling in users home directories^°.
-    * `add-template-to-homes.pl` for adding templated files^.
-    * `setup-on-login-hooks.pl` for installing .profile scripts to users^.
+  * `clone-to-homes.pl` for cloneing the current user home to all Crutech user's home directories^.
+  * `setup-users.pl` for filling in users home directories^°¡.
+    * `add-template-to-homes.pl` for adding templated files^¡.
+    * `setup-on-login-hooks.pl` for installing .profile scripts to users^¡.
   * `find-user-files.pl` for collecting and archiving and user files after camp.
   * `clean-users.pl` for cleaning up users after a camp^.
 
 -- ^ These scripts require root user permission, either run from the root user or call with sudo.
 -- ° This script requires the presence of a 'starcraft' group to exist on the system, if required execute: `groupadd starcraft`.
+-- ¡ These scripts are superceded by `clone-to-homes.pl`
 
 to call these scripts, run them from the project root:
 `bin/<script-name>.pl [options]`
@@ -33,6 +35,6 @@ The current definition is that a camper user name ends with: 1 or more numbers o
 for example:
   * 'Neo' would not be considered a camp user name.
   * 'Nemo1' would be considered a camp user name.
-  * 'buzz88l' would asl be a camper user name
+  * 'buzz88l' would also be a camp user name
 
 The above assumption is intended to permeate the entire suite of scripts.

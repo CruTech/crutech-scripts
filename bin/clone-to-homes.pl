@@ -4,6 +4,9 @@ use warnings;
 
 use feature qw( say );
 
+use Getopt::Long;
+use Pod::Usage;
+
 use Path::Tiny;
 
 # Add our project lib directory to the module search path
@@ -11,8 +14,33 @@ use FindBin qw( $Bin );
 use lib path($Bin)->parent->child('lib')->stringify;
 use Crutech::Utils qw( ltsp_users run );
 
-# Collect users grab their uid and gid numbers. template is added in for dev
-my @target_users = map { my $stat = $_->stat; {home => $_, uid => $stat->uid, gid => $stat->gid} } map { path("/home/$_/") } (ltsp_users(), 'template');
+
+#
+# Handle CLI arguments
+#
+
+my $help;
+my $man;
+GetOptions(
+    "help|?"          => \$help,
+    "man"             => \$man,
+) or pod2usage(2);
+
+#helps
+pod2usage(1) if $help;
+pod2usage(-exitval => 0, -verbose => 2) if $man;
+
+#
+# Collect environement and configuration info
+#
+
+# Collect users grab their uid and gid numbers. template is added in for development and testing.
+my @target_users = map {
+	my $stat = $_->stat;
+	{home => $_, uid => $stat->uid, gid => $stat->gid}
+} map {
+	path("/home/$_/") 
+} (ltsp_users(), 'template');
 
 say "Updating homes for: \n" . join("\t\n", map { join ', ', @{$_}{qw(home uid gid)} } @target_users);
 
@@ -38,6 +66,7 @@ say "Cache linker set to $home";
 $cache_linker->spew("#! /bin/bash\n# Cache linker file generated: " . localtime());
 chmod 550, $cache_linker->stringify;
 
+# Set the minimum and maximum binary sizes to be considered for caching
 my ($cache_min, $cache_max) = map { $_ * 1024 * 1024 } (10, 500);
 
 #
@@ -118,7 +147,7 @@ while ( my $path = $file_iterator->() ) {
 				next
 			}
 		}
-		
+
 		# Copy
 		$home_size += $size;
 		add_to_home($home, $_, $path) for @target_users; 
@@ -229,3 +258,61 @@ sub write_template {
 
 	$new_path
 }
+
+__END__
+
+=head1 NAME
+
+clone-to-homes.pl - A script for cloneing one user's home to many users.
+
+=head1 SYNOPSIS
+
+clone-to-homes.pl [options]
+
+Options:
+
+ --help             brief help message
+
+ --man              complete doc
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<--help>
+
+Print a brief help message and exit.
+
+=item B<--man>
+
+Print this man page and exit.
+
+
+=back
+
+=head1 DESCRIPTION
+
+B<This program> Searches the current user's home directory and copies the content to camp user's home directories.
+
+The concept is to try provide a system where a template user can be treated as a WYSIWYG editable version of new camp users.
+To control this process there are a collection of filter defenitions in `config/update-homes` which allow for exclusion and special treatment of specified files.
+For example if you are running minecraft, the template user can log in and perform the initial content downloads and then when the uesr is cloned, all the content will be copied into the target user's homes.
+The filters are written as regular expressions applied to a file's path.
+There are currently three filter defenitions.
+
+The ignore-list defines the first set of filters applied to files found during the user cloneing process.
+The patterns defined in this file will cause a file path which matches to be rejected, else the file will continue along the filter chain.
+
+The template-list defines filters to catch files which may need their content rewritten to work in the context of a different user.
+If a file matches this filter it will be copied in text mode and any verbatim use of the current user's home path will be replaced with the target user's home path.
+If a file does not match this filtered it will be binary copied into the target user's directory structure.
+
+The no-cache-list is currently set to disable for all files as this feature is not yet out of the experimental stage.
+This feature is considering the posability of collecting large read-only files into a commonley accesable shared structure and dynamically symlinked into a user's directory tree on login.
+
+Caveats
+* Be careful not to copy any sensitive data into user directories!
+* The size of the template home is effectivly multiplied by every user you clone to, be sure not to run out of disk space!
+* This script will overwrite existing files, Be careful not to overwrite someone else's data!
+* This script does not clean up a targeted user's home before copying to the user, for consistent results, only copy to a clean targets.
+=cut
