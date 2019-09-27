@@ -1,0 +1,26 @@
+# File name patterns to be ignored by generate home map.pl
+# Lines begining with a hash are ignored '#' and empty lines are ignored
+#
+# If you're getting stuck on the syntax, a good reference is the perlre manpage,
+#  `perldoc perlre` or online: https://perldoc.perl.org/perlre.html
+
+# Skip session files
+\.fuse_\w+$
+\.\w+_history$
+\.xsession-errors
+^/home/\w+/.cache
+^/home/\w+/.gnupg
+
+# Skip archives
+\.deb$
+\.tar\.gz$
+^/home/\w+/[\w\-\_\s]+.zip$
+
+# Skip dev files
+^/home/\w+/script
+
+# Skip log files
+build\.log$
+
+# Troublesome files
+\.wine/dosdevices/.+$

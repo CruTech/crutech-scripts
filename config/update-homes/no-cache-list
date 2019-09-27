@@ -1,0 +1,13 @@
+# File name patterns to be rejected for caching by generate home map.pl
+# Lines begining with a hash are ignored '#' and empty lines are ignored
+#
+# If you're getting stuck on the syntax, a good reference is the perlre manpage,
+#  `perldoc perlre` or online: https://perldoc.perl.org/perlre.html
+
+# Skip dev files
+/\.config/
+\.txt$
+\.sqlite\d?$
+
+# Disable caching
+.+
